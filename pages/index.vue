@@ -1,6 +1,4 @@
-<template>
-    {{ user }}
-</template>
+<template></template>
 
 <script setup lang="ts">
 definePageMeta({

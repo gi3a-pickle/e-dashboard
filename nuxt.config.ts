@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     'nuxt-icon',
+    '@pinia/nuxt',
     'shadcn-nuxt',
     '@nuxtjs/supabase',
     '@nuxtjs/tailwindcss'
@@ -23,7 +24,7 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
-      exclude: ['/'],
+      exclude: [],
     }
   },
 })
