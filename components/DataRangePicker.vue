@@ -3,6 +3,7 @@ import { addDays, format } from 'date-fns'
 
 import { ref } from 'vue'
 import { cn } from '@/lib/utils'
+// https://www.shadcn-vue.com/examples/dashboard.html
 
 const date = ref({
     start: new Date(2023, 0, 20),
