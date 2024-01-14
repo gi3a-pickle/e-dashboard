@@ -23,9 +23,9 @@ export default defineEventHandler(async (event) => {
                 statusCode: parseInt(error.code),
                 statusMessage: error.message,
             });
-        
+
         setResponseStatus(event, 200)
-        return {data: data, query: query}
+        return { data: data, query: query }
     } catch (error) {
         const supabaseError = error as SupabaseError;
         setResponseStatus(event, 500);

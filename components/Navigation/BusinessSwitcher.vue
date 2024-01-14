@@ -1,75 +1,83 @@
+
 <script setup lang="ts">
-import { ref } from 'vue'
-
-
+import { ref, watch, onMounted } from 'vue'
 import { cn } from '@/lib/utils'
 
-const groups = [
-    {
-        label: 'Personal Account',
-        teams: [
-            {
-                label: 'Alicia Koch',
-                value: 'personal',
-            },
-        ],
-    },
-    {
-        label: 'Teams',
-        teams: [
-            {
-                label: 'Acme Inc.',
-                value: 'acme-inc',
-            },
-            {
-                label: 'Monsters Inc.',
-                value: 'monsters',
-            },
-        ],
-    },
-]
 
-type Team = (typeof groups)[number]['teams'][number]
+const user = useSupabaseUser();
+const businessStore = useBusinessStore();
+
+const businesses = ref([]);
+const user_id: any = user?.value?.id;
+
+// Fetch businesses and update the selected business
+const fetchBusinesses = async () => {
+    const response: any = await businessStore.getAllBusinessess(user_id);
+    businesses.value = response?.data;
+
+    // Initialize the selectedBusiness with the first business if available
+    if (businesses.value.length > 0) {
+        selectedBusiness.value = businesses.value[0];
+        businessStore.setSelectedBusiness(businesses.value[0]);
+    }
+}
+// Fetch businesses on component mount
+onMounted(fetchBusinesses);
+
+interface Business {
+    id: string;
+    name: string;
+    owner_id: string;
+    address: string;
+    type: string;
+}
 
 const open = ref(false)
-const showNewTeamDialog = ref(false)
-const selectedTeam = ref<Team>(groups[0].teams[0])
+const showNewBusinessDialog = ref(false)
+
+// Initialize selectedBusiness with a default value or from the store
+const selectedBusiness = ref<Business>(businessStore.selectedBusiness?.value || {});
+
+// Watch for changes and update the store
+watch(selectedBusiness, (newBusiness) => {
+    businessStore.setSelectedBusiness(newBusiness);
+});
 </script>
 
 <template>
-    <Dialog v-model:open="showNewTeamDialog">
+    <Dialog v-model:open="showNewBusinessDialog">
         <Popover v-model:open="open">
             <PopoverTrigger as-child>
-                <Button variant="outline" role="combobox" aria-expanded="open" aria-label="Select a team"
-                    :class="cn('w-[200px] justify-between', $attrs.class ?? '')">
+                <Button variant="outline" role="combobox" aria-expanded="open" aria-label="Select a business"
+                    :class="cn('w-[300px] justify-between', $attrs.class ?? '')">
                     <Avatar class="mr-2 h-5 w-5">
-                        <AvatarImage :src="`https://avatar.vercel.sh/${selectedTeam.value}.png`"
-                            :alt="selectedTeam.label" />
+                        <AvatarImage :src="`https://avatar.vercel.sh/${selectedBusiness.id}.png`"
+                            :alt="selectedBusiness.name" />
                         <AvatarFallback>SC</AvatarFallback>
                     </Avatar>
-                    {{ selectedTeam.label }}
+                    {{ selectedBusiness.name }}
                     <Icon name="radix-icons:caret-sort" class="ml-auto h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent class="w-[200px] p-0">
-                <Command :filter-function="(list, term) => list.filter(i => i.label?.toLowerCase()?.includes(term))">
+            <PopoverContent class="w-[300px] p-0">
+                <Command :filter-function="(list, term) => list.filter(i => i.name?.toLowerCase()?.includes(term))">
                     <CommandList>
-                        <CommandInput placeholder="Search team..." />
-                        <CommandEmpty>No team found.</CommandEmpty>
-                        <CommandGroup v-for="group in groups" :key="group.label" :heading="group.label">
-                            <CommandItem v-for="team in group.teams" :key="team.value" :value="team" class="text-sm"
+                        <CommandInput placeholder="Search business..." />
+                        <CommandEmpty>No business found.</CommandEmpty>
+                        <CommandGroup heading="Businessess">
+                            <CommandItem v-for="business in businesses" :key="business.id" :value="business" class="text-sm"
                                 @select="() => {
-                                    selectedTeam = team
+                                    selectedBusiness = business
                                     open = false
                                 }">
                                 <Avatar class="mr-2 h-5 w-5">
-                                    <AvatarImage :src="`https://avatar.vercel.sh/${team.value}.png`" :alt="team.label"
+                                    <AvatarImage :src="`https://avatar.vercel.sh/${business.id}.png`" :alt="business.id"
                                         class="grayscale" />
                                     <AvatarFallback>SC</AvatarFallback>
                                 </Avatar>
-                                {{ team.label }}
+                                {{ business.name }}
                                 <Icon name="radix-icons:check" :class="cn('ml-auto h-4 w-4',
-                                    selectedTeam.value === team.value
+                                    selectedBusiness.id === business.id
                                         ? 'opacity-100'
                                         : 'opacity-0',
                                 )" />
@@ -80,12 +88,12 @@ const selectedTeam = ref<Team>(groups[0].teams[0])
                     <CommandList>
                         <CommandGroup>
                             <DialogTrigger as-child>
-                                <CommandItem value="create-team" @select="() => {
+                                <CommandItem value="create-business" @select="() => {
                                     open = false
-                                    showNewTeamDialog = true
+                                    showNewBusinessDialog = true
                                 }">
-                                    <Icon name="radix-icons:plus-circled" />
-                                    Create Team
+                                    <Icon class="mr-2" name="radix-icons:plus-circled" />
+                                    Create Business
                                 </CommandItem>
                             </DialogTrigger>
                         </CommandGroup>
@@ -95,15 +103,15 @@ const selectedTeam = ref<Team>(groups[0].teams[0])
         </Popover>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Create team</DialogTitle>
+                <DialogTitle>Create business</DialogTitle>
                 <DialogDescription>
-                    Add a new team to manage products and customers.
+                    Add a new business to manage products and customers.
                 </DialogDescription>
             </DialogHeader>
             <div>
                 <div class="space-y-4 py-2 pb-4">
                     <div class="space-y-2">
-                        <Label for="name">Team name</Label>
+                        <Label for="name">Business name</Label>
                         <Input id="name" placeholder="Acme Inc." />
                     </div>
                     <div class="space-y-2">
@@ -131,7 +139,7 @@ const selectedTeam = ref<Team>(groups[0].teams[0])
                 </div>
             </div>
             <DialogFooter>
-                <Button variant="outline" @click="showNewTeamDialog = false">
+                <Button variant="outline" @click="showNewBusinessDialog = false">
                     Cancel
                 </Button>
                 <Button type="submit">

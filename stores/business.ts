@@ -2,20 +2,29 @@ import { defineStore } from 'pinia'
 
 export const useBusinessStore = defineStore('business', () => {
     const selectedBusiness = ref({
-        id: 0,
+        id: '',
         name: '',
-        owner_id: 0,
+        owner_id: '',
         address: '',
         type: ''
     });
     const allBusinessess = ref([]);
 
     // Get All Bussinesses
-    // Set Current Business
-
-  
-    return { 
-        selectedBusiness,
-        allBusinessess
+    const getAllBusinessess = async (owner_id: string) => {
+        const request = await $fetch(`/api/businessess?owner_id=${owner_id}`);
+        return request;
     }
-  })
+
+    const setSelectedBusiness = (business: any) => {
+        selectedBusiness.value = business;
+    }
+
+
+    return {
+        selectedBusiness,
+        allBusinessess,
+        setSelectedBusiness,
+        getAllBusinessess
+    }
+})
